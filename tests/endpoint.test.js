@@ -113,7 +113,10 @@ maybe_mp4("Player Metadata MP4", () => {
                       .expect(200);
 
     // There will always be atleast one video because of skip if check.
-    expect(res.body[0]).toContain(".mp4");
+    expect(res.body).toHaveProperty("videos")
+    expect(res.body.videos[0]).toHaveProperty("fname")
+    expect(res.body.videos[0]).toHaveProperty("max_length")
+    expect(res.body.videos[0].fname).toContain(".mp4")
   })
 })
 

@@ -2,9 +2,11 @@
 import { program } from "commander";
 import express from "express";
 import { glob } from "glob";
+import ffmpeg from "fluent-ffmpeg";
 
 // std
 import fs from "fs";
+import readLine from "readline";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -24,7 +26,9 @@ let options = program.opts();
 const root_dir = options.root;
 
 class VideoMetadata {
-    constructor(max_length) {
+    constructor(fname, max_length) {
+        this.fname = fname
+        // in milliseconds
         this.max_length = max_length;
     }
 }
@@ -72,6 +76,7 @@ class PlayerState {
 
 let PLAYER_STATE = new PlayerState();
 
+let LIB_CACHE = null;
 const ACTIONS = [
     "play",
     "pause",
@@ -102,7 +107,30 @@ app.get("/client.js", async (req, res) => {
 
 // Rest API for server status.
 app.get("/get_videos", async (req, res) => {
-    options = {cwd: path.join(cwd, "videos")};
+    res.setHeader("Content-Type", "application/json");
+    if (LIB_CACHE != null) {
+        return res.send(JSON.stringify(LIB_CACHE));
+    }
+
+    // Check if cache exists, if so, we use that instead.
+    let video_directory = path.join(cwd, "videos");
+    let cache_file_fpath = path.join(video_directory, 'video_library.json');
+
+    // Attempt to load the file
+    let cache = null;
+    if (fs.existsSync(cache_file_fpath)) {
+        try {
+            cache = JSON.parse(await fs.readFile(cache_file_fpath, "utf-8"))
+            LIB_CACHE = cache;
+            return res.send(JSON.stringify(cache));
+        } catch {
+            console.log("Unable to read cache file: " + cache_file_fpath);
+        }
+    }
+    
+    // Cache does not exist, we attempt to generate one of our own.
+     
+    let options = {cwd: video_directory};
     let results = (await Promise.all([
         glob("*.mkv", options),
         glob("*.mp4", options)
@@ -110,8 +138,23 @@ app.get("/get_videos", async (req, res) => {
 
     // Enforce order for indices.
     results.sort();
-    res.setHeader("Content-Type", "application/json");
-    const payload = JSON.stringify(results);
+
+    // go through each results
+    let metadata_array = [];
+    for (let short_fpath of results) {
+        let fpath = path.join(video_directory, short_fpath);
+        let metadata = await new Promise((resolve, reject) => {
+            ffmpeg.ffprobe(fpath, (err, metadata) => {
+                if (err) { return reject(err); }
+                return resolve(metadata);
+            })
+        });
+        // Convert to ms.
+        metadata_array.push(new VideoMetadata(short_fpath, metadata.format.duration * 1000)); 
+    }
+
+    console.log(metadata_array);
+    const payload = JSON.stringify({videos: metadata_array});
     res.send(payload);
 });
 
