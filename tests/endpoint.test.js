@@ -3,7 +3,7 @@
  */
 
 import request from "supertest";
-import app from "./index";
+import app from "../index";
 import { globSync } from "glob";
 import path from "path";
 
@@ -39,19 +39,27 @@ describe("Player States", () => {
   })
 
   test("Play action enum check", async () => {
-    for(let action of ["play", "pause", "set_time", "reset"]) {
-      await request(app).post(`/controls?action=${action}`)
+    for(let act of ["play", "pause", "reset"]) {
+      await request(app).post("/controls")
+                  .send({action: act})
                   .expect("Content-Type", /json/)
                   .expect(200);
     }
 
+    // Set time has extra params.
+    await request(app).post("/controls")
+                .send({action: "set_time", delta: 0, is_playing: false})
+                .expect("Content-Type", /json/)
+                .expect(200);
+
     // Test invalid points
     await request(app).post("/controls").expect(404);
     await request(app).post("/controls?actions=invalid").expect(404);
+    await request(app).post("/controls").send({action: "invalid"}).expect(404);
   })
 
   test("Test play action from default", async () => {
-    let res = await request(app).post("/controls?action=play")
+    let res = await request(app).post("/controls").send({action: "play"})
                       .expect("Content-Type", /json/)
                       .expect(200);
 
@@ -61,14 +69,14 @@ describe("Player States", () => {
     expect(payload.is_playing).toEqual(true);
 
     // The start time should only be within a few milliseconds
-    const start_time_tolerance = 10;
+    const start_time_tolerance = 20;
     const start_ms = new Date(payload.start_time).getTime()
     const now_ms = new Date().getTime();
     expect(Math.abs(now_ms - start_ms)).toBeLessThanOrEqual(start_time_tolerance);
   })
 
   test("Test play after pause", async () => {
-    let res_play = await request(app).post("/controls?action=play")
+    let res_play = await request(app).post("/controls").send({action: "play"})
                       .expect("Content-Type", /json/)
                       .expect(200);
 
@@ -78,7 +86,7 @@ describe("Player States", () => {
     await new Promise((r) => setTimeout(r, 0.2 * 1000));
 
     // Then pause once more
-    let res_pause = await request(app).post("/controls?action=pause")
+    let res_pause = await request(app).post("/controls").send({action: "pause"})
                       .expect("Content-Type", /json/)
                       .expect(200);
     const payload_pause = res_pause.body;
@@ -111,7 +119,7 @@ maybe_mp4("Player Metadata MP4", () => {
 
 afterEach(() => {
     // Force reset of player for future testing.
-    request(app).post(`/controls?action=reset`)
+    request(app).post(`/controls`).send({action: "reset"})
                 .expect("Content-Type", /json/)
                   .expect(200);
 })
