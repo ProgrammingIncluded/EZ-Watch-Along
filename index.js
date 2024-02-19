@@ -83,6 +83,8 @@ function verify_action(str_action) {
 }
 
 const app = express();
+app.use(express.json()); // for json
+app.use(express.urlencoded({ extended: true })); // for form data
 app.get("/", function(req, res) {
   res.sendFile(dirname + "/index.html");
 });
@@ -101,8 +103,9 @@ app.get("/get_videos", async (req, res) => {
     res.send(payload);
 });
 
+// TODO: set Videos
 app.post("/controls", function(req, res) {
-    const action = req.query.action;
+    const action = req.body.action;
     if (!verify_action(action)) {
         return res.sendStatus(404);
     }
@@ -119,7 +122,11 @@ app.post("/controls", function(req, res) {
             PLAYER_STATE.pause();
             break;
         case "set_time":
-            // TODO: Set player time
+            if (req.body.delta == undefined || req.body.is_playing == undefined) {
+                return res.sendStatus(404);
+            }
+
+            PLAYER_STATE.set_new_time(req.body.delta, req.body.is_playing);
             break;
     }
 
@@ -160,6 +167,7 @@ app.get("/video", function(req, res) {
 
 const server = app.listen(8080, function() {
   console.log(proj_name + " server started!")
+  console.log("Visit at: http://localhost:8080")
 });
 
 // Used for testing purposes.

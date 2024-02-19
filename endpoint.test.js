@@ -91,7 +91,6 @@ describe("Player States", () => {
     const start_time_tolerance = 20;
     expect(Math.abs(start_time_upper_bound - payload_pause.delta)).toBeLessThanOrEqual(start_time_tolerance);
   })
-
 })
 
 // We can only run metadata tests if there exists atleast one video.

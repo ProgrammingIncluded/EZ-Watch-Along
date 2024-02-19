@@ -7,17 +7,123 @@
         <title>Ez Together Streamer</title>
         <style>
             body {
-                margin: 5% auto;
                 max-width: 100%;
                 background-color: rgb(14, 14, 14);
-                padding-top: 10%;
-                padding-left: 35%;
+                padding-top: 0%;
+            }
+
+            #video_container {
+                width: 75%;
+                margin: auto auto;
+            }
+
+            video {
+                width: 100%;
             }
         </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> 
+
+        <script>
+            var DISABLE_PUSH_DATA = false;
+
+            var UPDATE_CYCLE = 2000;
+
+            function reset_cool_down_push() {
+                DISABLE_PUSH_DATA = false;
+                setTimeout(update_loop, UPDATE_CYCLE / 2);
+            }
+
+            function set_video_state(control_data) {
+                let video_player = $("#video_player");
+                let delta = control_data.delta / 1000;
+                console.log(control_data.start_time);
+                console.log(new Date(control_data.start_time));
+                if (control_data.start_time != null) {
+                    delta += (new Date() - new Date(control_data.start_time)) / 1000;
+                }
+
+                if (control_data.is_playing) {
+                    video_player.get(0).play();
+                }
+                let ct = video_player.get(0).currentTime;
+                // Prevent callback recursion
+                if (Math.abs(ct - delta) >= 5) {
+                    video_player.get(0).currentTime = delta;
+                }
+            }
+
+            function update_loop() {
+                $.get("/controls", function(control_data) {
+                    if (control_data == null) {
+                        alert("FIX ME PLS.");
+                    }
+                    console.log(control_data);
+
+                    DISABLE_PUSH_DATA = true;
+                    set_video_state(control_data);
+                    setTimeout(reset_cool_down_push, UPDATE_CYCLE / 2);
+                });
+            }
+
+            $(document).ready(function() {
+                // Set a update loop to sync with server.
+                update_loop();
+
+                // Add handlers
+                let video_player = $("#video_player");
+                video_player.on("play", function(){
+                    if (DISABLE_PUSH_DATA) {
+                        return;
+                    }
+                    $.post({
+                        traditional: true,
+                        url: "/controls",
+                        contentType: "application/json",
+                        data: JSON.stringify({action: "play"}),
+                        dataType: "json",
+                        success: function(data) { console.log(data); }
+                    });
+                });
+
+                video_player.on("pause", function(){
+                    if (DISABLE_PUSH_DATA) {
+                        return;
+                    }
+                    $.post({
+                        traditional: true,
+                        url: "/controls",
+                        contentType: "application/json",
+                        data: JSON.stringify({action: "pause"}),
+                        dataType: "json",
+                        success: function(data) { console.log(data); }
+                    });
+                });
+
+                video_player.on("seeking", function() {
+                    if (DISABLE_PUSH_DATA) {
+                        return;
+                    }
+                    $.post({
+                        traditional: true,
+                        url: "/controls",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                                action: "set_time",
+                                delta: video_player.get(0).currentTime * 1000,
+                                is_player: video_player.get(0).paused
+                              }),
+                        dataType: "json",
+                        success: function(data) { console.log(data); }
+                    });
+                });
+            });
+        </script>
     </head>
     <body>
-        <video id="videoPlayer" width="50%" controls muted="muted" autoplay>
-            <source src="/video" type="video/mp4" />
-        </video>
+        <div id="video_container">
+            <video id="video_player" width="50%" controls muted="muted">
+                <source src="/video" type="video/mp4" />
+            </video>
+        </div>
     </body>
 </html>
