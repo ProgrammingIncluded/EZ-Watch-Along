@@ -25,12 +25,11 @@
 
         <script>
             var DISABLE_PUSH_DATA = false;
-
-            var UPDATE_CYCLE = 2000;
+            var UPDATE_CYCLE = 500;
 
             function reset_cool_down_push() {
                 DISABLE_PUSH_DATA = false;
-                setTimeout(update_loop, UPDATE_CYCLE * (3/4));
+                setTimeout(update_loop, UPDATE_CYCLE);
             }
 
             function set_video_state(control_data) {
@@ -45,12 +44,11 @@
                 } else {
                     video_player.get(0).pause();
                 }
+
                 let ct = video_player.get(0).currentTime;
-                // Prevent callback recursion
-                if (Math.abs(ct - delta) >= 5) {
+                if (Math.abs(ct - delta) >= 2) {
                     video_player.get(0).currentTime = delta;
                 }
-                console.log(control_data);
             }
 
             function update_loop() {
@@ -61,7 +59,7 @@
 
                     DISABLE_PUSH_DATA = true;
                     set_video_state(control_data);
-                    setTimeout(reset_cool_down_push, UPDATE_CYCLE * (1/4));
+                    setTimeout(reset_cool_down_push, 200);
                 });
             }
 
@@ -103,7 +101,6 @@
                     if (DISABLE_PUSH_DATA) {
                         return;
                     }
-                    console.log("SEEKING");
                     $.post({
                         traditional: true,
                         url: "/controls",

@@ -147,7 +147,7 @@ app.get("/video", function(req, res) {
     if (!range) {
         res.status(400).send("Requires Range header");
     }
-    const video_name = "episode_one_jp.mp4";
+    const video_name = "ova.mp4";
     const video_path = path.join(root_dir, video_name);
     const video_size = fs.statSync(video_path).size;
     const CHUNK_SIZE = 10 ** 6;
