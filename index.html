@@ -30,26 +30,27 @@
 
             function reset_cool_down_push() {
                 DISABLE_PUSH_DATA = false;
-                setTimeout(update_loop, UPDATE_CYCLE / 2);
+                setTimeout(update_loop, UPDATE_CYCLE * (3/4));
             }
 
             function set_video_state(control_data) {
                 let video_player = $("#video_player");
                 let delta = control_data.delta / 1000;
-                console.log(control_data.start_time);
-                console.log(new Date(control_data.start_time));
                 if (control_data.start_time != null) {
                     delta += (new Date() - new Date(control_data.start_time)) / 1000;
                 }
 
                 if (control_data.is_playing) {
                     video_player.get(0).play();
+                } else {
+                    video_player.get(0).pause();
                 }
                 let ct = video_player.get(0).currentTime;
                 // Prevent callback recursion
                 if (Math.abs(ct - delta) >= 5) {
                     video_player.get(0).currentTime = delta;
                 }
+                console.log(control_data);
             }
 
             function update_loop() {
@@ -57,11 +58,10 @@
                     if (control_data == null) {
                         alert("FIX ME PLS.");
                     }
-                    console.log(control_data);
 
                     DISABLE_PUSH_DATA = true;
                     set_video_state(control_data);
-                    setTimeout(reset_cool_down_push, UPDATE_CYCLE / 2);
+                    setTimeout(reset_cool_down_push, UPDATE_CYCLE * (1/4));
                 });
             }
 
@@ -103,6 +103,7 @@
                     if (DISABLE_PUSH_DATA) {
                         return;
                     }
+                    console.log("SEEKING");
                     $.post({
                         traditional: true,
                         url: "/controls",
@@ -110,7 +111,7 @@
                         data: JSON.stringify({
                                 action: "set_time",
                                 delta: video_player.get(0).currentTime * 1000,
-                                is_player: video_player.get(0).paused
+                                is_playing: !video_player.get(0).paused
                               }),
                         dataType: "json",
                         success: function(data) { console.log(data); }
