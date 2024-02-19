@@ -103,6 +103,10 @@ app.get("/get_videos", async (req, res) => {
     res.send(payload);
 });
 
+app.get("/client.js", async (req, res) => {
+    res.sendFile(path.join(dirname, "client.js"))
+});
+
 // TODO: set Videos
 app.post("/controls", function(req, res) {
     const action = req.body.action;

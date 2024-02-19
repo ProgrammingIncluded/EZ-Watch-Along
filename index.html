@@ -20,132 +20,111 @@
             body {
                 max-width: 100%;
                 padding-top: 0%;
+                margin: 0;
             }
 
             #video_container {
-                width: 75%;
-                margin: 0;
-                margin-left: 2rem;
+                grid-row-start: 1;
+                grid-row-end: 4;
+                margin: 0 auto;
             }
 
             #side_bar {
+
             }
 
             video {
-                width: 100%;
+                display: block;
+                margin: 0 auto;
             }
 
             #player_grid {
                 display: grid;
-                grid-template-rows: repeat(6, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                height: 100vh;
                 gap: 10px;
+                width: 100vw;
+                padding-top: 5rem;
+            }
+
+            nav {
+                width: 100vw;
+                padding: 0;
+                margin: 0;
+                height: 80px;
+                background: rgb(14,14,14);
+                background: linear-gradient(0deg, rgba(14,14,14,1) 5%, rgba(35,15,61,1) 36%, rgba(58,6,62,1) 100%); 
+                overflow: hidden;
+            }
+
+            nav ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                background: rgba(0,0,0,0.0);
+            }
+
+            nav ul li {
+                display: inline;
+                float: left;
+                background: rgba(0,0,0,0.0);
+            }
+
+            nav ul li a {
+                text-decoration: none;
+                background: rgba(0,0,0,0.0);
+                text-align: center;
+                padding: 14px 16px;
+                font-size: 1.5rem;
+            }
+
+            nav ul li a:hover {
+                background-color: #111;
+                background: rgba(0,0,0,0.0);
+            }
+
+            #search {
+                border: none;
+                margin-top: 10px;
+                float: right;
+                font-size: 17px;
+                margin-left: 16px;
+                background: rgba(12, 12, 12, 0.5);
+                -webkit-border-radius: 20px;
+                -moz-border-radius: 20px;
+                border-radius: 20px;
+                height: 30px;
+                text-indent: 10px;
+            }
+
+            #logo {
+                float: right;
+                padding-right: 18px;
+                padding-top: 10px;
             }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> 
 
-        <script>
-            var DISABLE_PUSH_DATA = false;
-            var UPDATE_CYCLE = 500;
-
-            function reset_cool_down_push() {
-                DISABLE_PUSH_DATA = false;
-                setTimeout(update_loop, UPDATE_CYCLE);
-            }
-
-            function set_video_state(control_data) {
-                let video_player = $("#video_player");
-                let delta = control_data.delta / 1000;
-                if (control_data.start_time != null) {
-                    delta += (new Date() - new Date(control_data.start_time)) / 1000;
-                }
-
-                if (control_data.is_playing) {
-                    video_player.get(0).play();
-                } else {
-                    video_player.get(0).pause();
-                }
-
-                let ct = video_player.get(0).currentTime;
-                if (Math.abs(ct - delta) >= 2) {
-                    video_player.get(0).currentTime = delta;
-                }
-            }
-
-            function update_loop() {
-                $.get("/controls", function(control_data) {
-                    if (control_data == null) {
-                        alert("FIX ME PLS.");
-                    }
-
-                    DISABLE_PUSH_DATA = true;
-                    set_video_state(control_data);
-                    setTimeout(reset_cool_down_push, 200);
-                });
-            }
-
-            $(document).ready(function() {
-                // Set a update loop to sync with server.
-                update_loop();
-
-                // Add handlers
-                let video_player = $("#video_player");
-                video_player.on("play", function(){
-                    if (DISABLE_PUSH_DATA) {
-                        return;
-                    }
-                    $.post({
-                        traditional: true,
-                        url: "/controls",
-                        contentType: "application/json",
-                        data: JSON.stringify({action: "play"}),
-                        dataType: "json",
-                        success: function(data) { console.log(data); }
-                    });
-                });
-
-                video_player.on("pause", function(){
-                    if (DISABLE_PUSH_DATA) {
-                        return;
-                    }
-                    $.post({
-                        traditional: true,
-                        url: "/controls",
-                        contentType: "application/json",
-                        data: JSON.stringify({action: "pause"}),
-                        dataType: "json",
-                        success: function(data) { console.log(data); }
-                    });
-                });
-
-                video_player.on("seeking", function() {
-                    if (DISABLE_PUSH_DATA) {
-                        return;
-                    }
-                    $.post({
-                        traditional: true,
-                        url: "/controls",
-                        contentType: "application/json",
-                        data: JSON.stringify({
-                                action: "set_time",
-                                delta: video_player.get(0).currentTime * 1000,
-                                is_playing: !video_player.get(0).paused
-                              }),
-                        dataType: "json",
-                        success: function(data) { console.log(data); }
-                    });
-                });
-            });
-        </script>
+        <script src="/client.js"></script>
     </head>
     <body>
+        <nav>
+            <ul>
+                <li>
+                    <input id="search" type="text" placeholder="Search video...">
+                </li>
+                <li id="logo">
+                    <a href="/">
+                    EZ Watch-Along
+                    </a>
+                </li>
+            </ul>
+        </nav>
         <div id="player_grid">
             <div id="video_container">
                 <video id="video_player" width="50%" controls muted="muted">
                     <source src="/video" type="video/mp4" />
                 </video>
-            </div>
-            <div id="side_bar">
-               testing 
             </div>
         </div>
     </body>
