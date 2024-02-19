@@ -4,12 +4,15 @@
 
 import request from "supertest";
 import app from "./index";
+import { globSync } from "glob";
+import path from "path";
 
 // A test like implementation for parsing payload
 function transform_payload(raw_json) {
   expect(raw_json).toHaveProperty("delta")
   expect(raw_json).toHaveProperty("is_playing")
   expect(raw_json).toHaveProperty("start_time")
+  expect(raw_json).toHaveProperty("metadata")
 
   if (raw_json.start_time == null) {
     return;
@@ -30,7 +33,8 @@ describe("Player States", () => {
                                   .expect(200, {
                                     delta: 0,
                                     start_time: null,
-                                    is_playing: false
+                                    is_playing: false,
+                                    metadata: null
                                   });
   })
 
@@ -88,6 +92,22 @@ describe("Player States", () => {
     expect(Math.abs(start_time_upper_bound - payload_pause.delta)).toBeLessThanOrEqual(start_time_tolerance);
   })
 
+})
+
+// We can only run metadata tests if there exists atleast one video.
+const cwd = process.cwd();
+const video_fpath = path.join(cwd, "videos");
+const check_if_mp4 = globSync("*.mp4", {cwd: video_fpath}).length > 0;
+const maybe_mp4 = check_if_mp4 ? describe : describe.skip;
+maybe_mp4("Player Metadata MP4", () => {
+  test("List Metadata", async () => {
+    let res = await request(app).get("/get_videos") 
+                      .expect("Content-Type", /json/)
+                      .expect(200);
+
+    // There will always be atleast one video because of skip if check.
+    expect(res.body[0]).toContain(".mp4");
+  })
 })
 
 afterEach(() => {

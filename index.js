@@ -1,6 +1,7 @@
 // ext
 import { program } from "commander";
 import express from "express";
+import { glob } from "glob";
 
 // std
 import fs from "fs";
@@ -16,11 +17,10 @@ program
   .name(proj_name)
   .description("Stream a simple MP4/MKV file with subtitles support.")
   .version("0.1.0")
-  .option("-r, --root <fpath>", "root directory to serve video files", cwd);
+  .option("-r, --root <fpath>", "root directory to serve video files", path.join(cwd, "videos"));
 
 program.parse();
 let options = program.opts();
-
 const root_dir = options.root;
 
 class VideoMetadata {
@@ -38,7 +38,15 @@ class PlayerState {
         this.start_time = null;
         this.delta = 0; // milliseconds.
         this.is_playing = false;
-        this.metadata = new VideoMetadata();
+        this.metadata = null;
+    }
+
+    set_video_metadata(video_metadata) {
+        this.metadata = video_metadata;
+    }
+
+    get_video_metadata(video_metadata) {
+        return this.metadata;
     }
 
     play() {
@@ -77,6 +85,20 @@ function verify_action(str_action) {
 const app = express();
 app.get("/", function(req, res) {
   res.sendFile(dirname + "/index.html");
+});
+
+app.get("/get_videos", async (req, res) => {
+    options = {cwd: path.join(cwd, "videos")};
+    let results = (await Promise.all([
+        glob("*.mkv", options),
+        glob("*.mp4", options)
+    ])).flat();
+
+    // Enforce order for indices.
+    results.sort();
+    res.setHeader("Content-Type", "application/json");
+    const payload = JSON.stringify(results);
+    res.send(payload);
 });
 
 app.post("/controls", function(req, res) {
