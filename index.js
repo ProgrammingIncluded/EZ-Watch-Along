@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const proj_name = "ez_together_streamer";
+const proj_name = "ez_watch_along_streamer";
 const cwd = process.cwd();
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
