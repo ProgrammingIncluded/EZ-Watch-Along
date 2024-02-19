@@ -85,10 +85,22 @@ function verify_action(str_action) {
 const app = express();
 app.use(express.json()); // for json
 app.use(express.urlencoded({ extended: true })); // for form data
+
+// Simple endpoints for files.
 app.get("/", function(req, res) {
   res.sendFile(dirname + "/index.html");
 });
 
+app.get("/index.css", (req, res) => {
+  res.sendFile(path.join(dirname, "index.css"))
+});
+
+app.get("/client.js", async (req, res) => {
+    res.sendFile(path.join(dirname, "client.js"))
+});
+
+
+// Rest API for server status.
 app.get("/get_videos", async (req, res) => {
     options = {cwd: path.join(cwd, "videos")};
     let results = (await Promise.all([
@@ -101,10 +113,6 @@ app.get("/get_videos", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
     const payload = JSON.stringify(results);
     res.send(payload);
-});
-
-app.get("/client.js", async (req, res) => {
-    res.sendFile(path.join(dirname, "client.js"))
 });
 
 // TODO: set Videos
