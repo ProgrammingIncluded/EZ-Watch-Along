@@ -138,3 +138,40 @@ footer a {
     padding-right: 18px;
     padding-top: 10px;
 }
+
+@media only screen and (max-width: 800px) {
+#logo {
+    float: left;
+}
+
+nav {
+    height: 160px;
+}
+
+#player_grid {
+    height: calc( 100vh - 160px - 30px );
+}
+
+#side_bar {
+    position: absolute;
+    height: calc( 50vh );
+    width: 100%;
+    top: 140px;
+}
+
+#search {
+    width: 90%;
+    margin: auto;
+    margin-top: 10px;
+    display: block;
+    float: none;
+}
+
+video {
+    width: 100vw;
+}
+
+.search_pathname {
+    font-size: 1.2rem;
+}
+}
