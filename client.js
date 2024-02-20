@@ -88,6 +88,7 @@ function side_bar_search() {
     if (SERVER_VIDEOS == null) {
         side_bar.html("Loading...")
         setTimeout(side_bar_search, 1000);
+        return;
     }
 
     let filtered_results = SERVER_VIDEOS["videos"].filter((d) => { return d.fname.includes(search_text); });
@@ -98,9 +99,19 @@ function side_bar_search() {
 
     let idx = 0;
     side_bar.html("");
+    let clean_name_display = (fname) => {
+        let tokens = fname.split("/");
+        let last = tokens[tokens.length - 1];
+        let max_characters = 40;
+
+        if (last.length <= max_characters)
+            return last;
+
+        return last.substring(0, 20) + "..." + last.substring(last.length - max_characters, last.length);
+    }
     for (let r of filtered_results) {
         let fname_dom = $("<div>", {"class": "search_pathname", "fname": r.fname})
-        fname_dom.html(r.fname);
+        fname_dom.html(clean_name_display(r.fname));
 
         let duration_dom = $("<div>", {"class": "duration", "fname": r.fname})
         duration_dom.html("Duration: " + msToTime(r.max_length));

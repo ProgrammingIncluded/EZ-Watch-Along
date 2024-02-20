@@ -99,6 +99,37 @@ app.get("/client.js", async (req, res) => {
 });
 
 
+async function generate_video_db() {
+    let options = {cwd: root_dir};
+    let results = (await Promise.all([
+        glob("**/*.mkv", options),
+        glob("**/*.mp4", options)
+    ])).flat();
+
+    // Enforce order for indices.
+    results.sort();
+
+    // go through each results
+    let metadata_array = [];
+    for (let short_fpath of results) {
+        let fpath = path.join(root_dir, short_fpath);
+        let metadata = await util.promisify(ffmpeg.ffprobe)(fpath);
+        // Convert to ms.
+        metadata_array.push(new VideoMetadata(short_fpath, metadata.format.duration * 1000)); 
+    }
+
+    const data = {videos: metadata_array};
+    const payload = JSON.stringify(data);
+    console.log("Videos loaded to database: ", payload);
+
+    // Write the cache file.
+    let cache_file_fpath = path.join(root_dir, 'video_library.json');
+    fs.writeFileSync(cache_file_fpath, payload);
+
+    LIB_CACHE = data;
+    return data
+}
+
 // Rest API for server status.
 app.get("/get_videos", async (req, res) => {
     res.setHeader("Content-Type", "application/json");
@@ -123,28 +154,7 @@ app.get("/get_videos", async (req, res) => {
     }
     
     // Cache does not exist, we attempt to generate one of our own.
-     
-    let options = {cwd: root_dir};
-    let results = (await Promise.all([
-        glob("*.mkv", options),
-        glob("*.mp4", options)
-    ])).flat();
-
-    // Enforce order for indices.
-    results.sort();
-
-    // go through each results
-    let metadata_array = [];
-    for (let short_fpath of results) {
-        let fpath = path.join(root_dir, short_fpath);
-        let metadata = await util.promisify(ffmpeg.ffprobe)(fpath);
-        // Convert to ms.
-        metadata_array.push(new VideoMetadata(short_fpath, metadata.format.duration * 1000)); 
-    }
-
-    const payload = JSON.stringify({videos: metadata_array});
-    // Write the cache file.
-    fs.writeFileSync(cache_file_fpath, payload);
+    let payload = await generate_video_db();
     res.send(payload);
 });
 
@@ -239,6 +249,8 @@ const server = app.listen(8080, function() {
   console.log(proj_name + " server started!")
   console.log("Visit at: http://localhost:8080")
 });
+
+await generate_video_db();
 
 // Used for testing purposes.
 export default server;
