@@ -46,6 +46,21 @@ function set_video_state(control_data) {
     // Set the video source
     if (control_data.metadata != null) {
 
+        // attempt to fetch subtitles
+        let fetch_subtitles = () => {
+            let subtitle_fpath = `/subtitles?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN;
+            $.get(subtitle_fpath, () => {
+                let track_obj = video_player.find("track");
+                if (track_obj.length != 0) {
+                    $(track_obj.get(0)).remove();
+                }
+
+                track_obj = $("<track>", {label: "default", kind: "subtitles", src: subtitle_fpath});
+                video_player.append(track_obj);
+                video_player.trigger("create");
+            });
+        };
+
         let video_source = $("source")[0];
         if (video_source == undefined) {
             DISABLE_PUSH_DATA = true;
@@ -55,7 +70,7 @@ function set_video_state(control_data) {
                                          });
             video_player.append(video_source);
             video_player.get(0).load();
-            console.log(control_data);
+            fetch_subtitles();
         } else if (!$(video_source).attr("src").includes(encodeURI(control_data.metadata.fname))) {
             DISABLE_PUSH_DATA = true;
             video_player.get(0).pause();
@@ -63,7 +78,7 @@ function set_video_state(control_data) {
             video_player.get(0).load();
             $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN)
             video_player.get(0).load();
-            console.log(control_data);
+            fetch_subtitles();
         }
     }
 }

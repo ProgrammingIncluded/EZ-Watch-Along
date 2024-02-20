@@ -267,6 +267,35 @@ app.get("/video", function(req, res) {
     video_stream.pipe(res);
 })
 
+// TODO: Support multi track?
+app.get("/subtitles", function(req, res) {
+    if (req.query.token != token) {
+        return res.sendStatus(404);
+    }
+
+    const video_name = req.query.fname;
+    // Verify that the file exists.
+    if (video_name == undefined) {
+        return res.sendStatus(404);
+    } else if (LIB_CACHE == null) {
+        return res.sendStatus(404);
+    }
+
+    let valid_video = LIB_CACHE["videos"].find((e) => { return e.fname == video_name; });
+    if (valid_video == undefined) {
+        return res.sendStatus(404);
+    }
+
+    // Once video is found, check if there is a subtitle we can retrieve.
+    let subtitle_name = video_name.substring(0, video_name.length - 4) + ".vtt"
+    let subtitle_fpath = path.join(root_dir, subtitle_name);
+    if (!fs.existsSync(subtitle_fpath)) {
+        return res.sendStatus(404);
+    }
+
+    return res.sendFile(subtitle_fpath);
+})
+
 const server = app.listen(8080, function() {
     console.log(proj_name + " server started!")
     console.log("Your unique token for this session is: " + token)
