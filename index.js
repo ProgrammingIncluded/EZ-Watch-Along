@@ -296,12 +296,15 @@ app.get("/subtitles", function(req, res) {
     return res.sendFile(subtitle_fpath);
 })
 
-const server = app.listen(8080, function() {
+let server = app.listen(8080, function() {
     console.log(proj_name + " server started!")
     console.log("Your unique token for this session is: " + token)
     console.log("Keep the token a secret and share only with your friends. Access your server via:")
     console.log("Visit at: http://localhost:8080?token=" + token + "\n")
 });
+
+// For testing purposes.
+server.token = token;
 
 await generate_video_db();
 

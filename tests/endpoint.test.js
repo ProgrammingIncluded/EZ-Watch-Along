@@ -21,14 +21,16 @@ function transform_payload(raw_json) {
   raw_json.start_time = new Date(raw_json.start_time)
 }
 
+let TOKEN = app.token;
+
 describe("Player States", () => {
   test("Basic get point", async () => {
-    const res = await request(app).get("/").expect(200);
+    const res = await request(app).get("/?token=" + TOKEN).expect(200);
     expect(res.text).toContain("DOCTYPE html");
   })
 
   test("Player default state", async () => {
-    const res = await request(app).get("/controls")
+    const res = await request(app).get("/controls?token=" + TOKEN)
                                   .expect("Content-Type", /json/)
                                   .expect(200, {
                                     delta: 0,
@@ -40,26 +42,26 @@ describe("Player States", () => {
 
   test("Play action enum check", async () => {
     for(let act of ["play", "pause", "reset"]) {
-      await request(app).post("/controls")
+      await request(app).post("/controls?token=" + TOKEN)
                   .send({action: act})
                   .expect("Content-Type", /json/)
                   .expect(200);
     }
 
     // Set time has extra params.
-    await request(app).post("/controls")
+    await request(app).post("/controls?token=" + TOKEN)
                 .send({action: "set_time", delta: 0, is_playing: false})
                 .expect("Content-Type", /json/)
                 .expect(200);
 
     // Test invalid points
-    await request(app).post("/controls").expect(404);
-    await request(app).post("/controls?actions=invalid").expect(404);
-    await request(app).post("/controls").send({action: "invalid"}).expect(404);
+    await request(app).post("/controls?token=" + TOKEN).expect(404);
+    await request(app).post("/controls?actions=invalid&token=" + TOKEN).expect(404);
+    await request(app).post("/controls?token=" + TOKEN).send({action: "invalid"}).expect(404);
   })
 
   test("Test play action from default", async () => {
-    let res = await request(app).post("/controls").send({action: "play"})
+    let res = await request(app).post("/controls?token=" + TOKEN).send({action: "play"})
                       .expect("Content-Type", /json/)
                       .expect(200);
 
@@ -76,7 +78,7 @@ describe("Player States", () => {
   })
 
   test("Test play after pause", async () => {
-    let res_play = await request(app).post("/controls").send({action: "play"})
+    let res_play = await request(app).post("/controls?token=" + TOKEN).send({action: "play"})
                       .expect("Content-Type", /json/)
                       .expect(200);
 
@@ -86,7 +88,7 @@ describe("Player States", () => {
     await new Promise((r) => setTimeout(r, 0.2 * 1000));
 
     // Then pause once more
-    let res_pause = await request(app).post("/controls").send({action: "pause"})
+    let res_pause = await request(app).post("/controls?token=" + TOKEN).send({action: "pause"})
                       .expect("Content-Type", /json/)
                       .expect(200);
     const payload_pause = res_pause.body;
@@ -108,7 +110,7 @@ const check_if_mp4 = globSync("*.mp4", {cwd: video_fpath}).length > 0;
 const maybe_mp4 = check_if_mp4 ? describe : describe.skip;
 maybe_mp4("Player Metadata MP4", () => {
   test("List Metadata", async () => {
-    let res = await request(app).get("/get_videos") 
+    let res = await request(app).get("/get_videos?token=" + TOKEN) 
                       .expect("Content-Type", /json/)
                       .expect(200);
 
@@ -122,7 +124,7 @@ maybe_mp4("Player Metadata MP4", () => {
 
 afterEach(() => {
     // Force reset of player for future testing.
-    request(app).post(`/controls`).send({action: "reset"})
+    request(app).post("/controls?token=" + TOKEN).send({action: "reset"})
                 .expect("Content-Type", /json/)
                   .expect(200);
 })
