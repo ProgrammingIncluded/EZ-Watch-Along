@@ -18,7 +18,7 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 program
   .name(proj_name)
-  .description("Stream a simple MP4/MKV file with subtitles support.")
+  .description("Stream a simple MP4 file with subtitles support.")
   .version("0.1.0")
   .option("-r, --root <fpath>", "root directory to serve video files", path.join(cwd, "videos"))
   .option("-t, --token <uid>", "unique token required for access the program", Math.random().toString(16).slice(2))
@@ -107,7 +107,7 @@ app.get("/client.js", async (req, res) => {
 async function generate_video_db() {
     let options = {cwd: root_dir};
     let results = (await Promise.all([
-        glob("**/*.mkv", options),
+        // glob("**/*.mkv", options), TODO
         glob("**/*.mp4", options)
     ])).flat();
 
