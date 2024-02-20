@@ -4,6 +4,10 @@ var UPDATE_CYCLE = 500;
 var SERVER_VIDEOS = null;
 var LOADING_VIDEO_DATA = true;
 
+// Get our token
+var page_url = window.location.search.substring(1)
+var TOKEN = page_url.split("token=")[1]
+
 // kudos to: https://stackoverflow.com/questions/19700283/how-to-convert-time-in-milliseconds-to-hours-min-sec-format-in-javascript
 function msToTime(ms) {
     let seconds = (ms / 1000).toFixed(1);
@@ -45,7 +49,7 @@ function set_video_state(control_data) {
         let video_source = $("source")[0];
         if (video_source == undefined) {
             video_source = $("<source>", {
-                                            src: `/video?fname=${encodeURI(control_data.metadata.fname)}`,
+                                            src: `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN,
                                             type: "video/mp4"
                                          });
             video_player.append(video_source);
@@ -57,12 +61,12 @@ function set_video_state(control_data) {
             video_player.get(0).load();
             $.post({
                 traditional: true,
-                url: "/controls",
+                url: "/controls?token=" + TOKEN,
                 contentType: "application/json",
                 data: JSON.stringify({action: "reset"}),
                 dataType: "json",
                 success: function(data) { 
-                    $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}`)
+                    $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN)
                     video_player.get(0).load();
                 }
             });
@@ -71,7 +75,7 @@ function set_video_state(control_data) {
 }
 
 function update_loop() {
-    $.get("/controls", function(control_data) {
+    $.get("/controls?token=" + TOKEN, function(control_data) {
         if (control_data == null) {
             alert("FIX ME PLS.");
         }
@@ -130,7 +134,7 @@ function side_bar_search() {
         let video_fname = $(this).attr("fname");
         $.post({
             traditional: true,
-            url: "/controls",
+            url: "/controls?token=" + TOKEN,
             contentType: "application/json",
             data: JSON.stringify({
                     action: "set_video",
@@ -147,7 +151,7 @@ $(document).ready(function() {
     update_loop();
 
     // Get result.
-    $.get("/get_videos", function(data) {
+    $.get("/get_videos?token=" + TOKEN, function(data) {
         SERVER_VIDEOS = data;
         LOADING_VIDEO_DATA = false;
         side_bar_search();
@@ -161,7 +165,7 @@ $(document).ready(function() {
         }
         $.post({
             traditional: true,
-            url: "/controls",
+            url: "/controls?token=" + TOKEN,
             contentType: "application/json",
             data: JSON.stringify({action: "play"}),
             dataType: "json",
@@ -175,7 +179,7 @@ $(document).ready(function() {
         }
         $.post({
             traditional: true,
-            url: "/controls",
+            url: "/controls?token=" + TOKEN,
             contentType: "application/json",
             data: JSON.stringify({action: "pause"}),
             dataType: "json",
@@ -189,7 +193,7 @@ $(document).ready(function() {
         }
         $.post({
             traditional: true,
-            url: "/controls",
+            url: "/controls?token=" + TOKEN,
             contentType: "application/json",
             data: JSON.stringify({
                     action: "set_time",

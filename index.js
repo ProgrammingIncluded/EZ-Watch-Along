@@ -20,11 +20,13 @@ program
   .name(proj_name)
   .description("Stream a simple MP4/MKV file with subtitles support.")
   .version("0.1.0")
-  .option("-r, --root <fpath>", "root directory to serve video files", path.join(cwd, "videos"));
+  .option("-r, --root <fpath>", "root directory to serve video files", path.join(cwd, "videos"))
+  .option("-t, --token <uid>", "unique token required for access the program", Math.random().toString(16).slice(2))
 
 program.parse();
 let options = program.opts();
 const root_dir = options.root;
+const token = options.token;
 
 class VideoMetadata {
     constructor(fname, max_length) {
@@ -87,6 +89,9 @@ app.use(express.urlencoded({ extended: true })); // for form data
 
 // Simple endpoints for files.
 app.get("/", function(req, res) {
+  if (req.query.token != token) {
+      return res.sendStatus(404);
+  }
   res.sendFile(dirname + "/index.html");
 });
 
@@ -120,7 +125,7 @@ async function generate_video_db() {
 
     const data = {videos: metadata_array};
     const payload = JSON.stringify(data);
-    console.log("Videos loaded to database: ", payload);
+    console.log("Videos loaded to database: ", data.videos.length);
 
     // Write the cache file.
     let cache_file_fpath = path.join(root_dir, 'video_library.json');
@@ -132,6 +137,10 @@ async function generate_video_db() {
 
 // Rest API for server status.
 app.get("/get_videos", async (req, res) => {
+    if (req.query.token != token) {
+        return res.sendStatus(404);
+    }
+
     res.setHeader("Content-Type", "application/json");
     if (LIB_CACHE != null) {
         return res.send(JSON.stringify(LIB_CACHE));
@@ -160,6 +169,10 @@ app.get("/get_videos", async (req, res) => {
 
 // TODO: set Videos
 app.post("/controls", function(req, res) {
+    if (req.query.token != token) {
+        return res.sendStatus(404);
+    }
+
     const action = req.body.action;
     if (!verify_action(action)) {
         return res.sendStatus(404);
@@ -204,6 +217,10 @@ app.post("/controls", function(req, res) {
 });
 
 app.get("/controls", function(req, res) {
+    if (req.query.token != token) {
+        return res.sendStatus(404);
+    }
+
     // Retrieve controller information.
     res.setHeader("Content-Type", "application/json");
     const payload = JSON.stringify(PLAYER_STATE);
@@ -211,7 +228,12 @@ app.get("/controls", function(req, res) {
 });
 
 app.get("/video", function(req, res) {
+    if (req.query.token != token) {
+        return res.sendStatus(404);
+    }
+
     const video_name = req.query.fname;
+
     if (video_name == undefined) {
         return res.sendStatus(404);
     } else if (LIB_CACHE == null) {
@@ -246,8 +268,10 @@ app.get("/video", function(req, res) {
 })
 
 const server = app.listen(8080, function() {
-  console.log(proj_name + " server started!")
-  console.log("Visit at: http://localhost:8080")
+    console.log(proj_name + " server started!")
+    console.log("Your unique token for this session is: " + token)
+    console.log("Keep the token a secret and share only with your friends. Access your server via:")
+    console.log("Visit at: http://localhost:8080?token=" + token + "\n")
 });
 
 await generate_video_db();
