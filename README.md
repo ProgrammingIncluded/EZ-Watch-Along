@@ -17,6 +17,7 @@ A hassle free solution for watching and syncing videos you own amongst your frie
 ## How to Run
 
 ```bash
+npm install # only need to run once.
 node index.js --root <path_to_videos_folder>
 ```
 

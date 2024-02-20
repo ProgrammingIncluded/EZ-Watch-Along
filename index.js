@@ -11,7 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import util from "util";
 
-const proj_name = "ez_watch_along_streamer";
+const proj_name = "ez_watch_along_server";
 const cwd = process.cwd();
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
