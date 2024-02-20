@@ -9,6 +9,7 @@ import fs from "fs";
 import readLine from "readline";
 import path from "path";
 import { fileURLToPath } from "url";
+import util from "util";
 
 const proj_name = "ez_watch_along_streamer";
 const cwd = process.cwd();
@@ -113,24 +114,24 @@ app.get("/get_videos", async (req, res) => {
     }
 
     // Check if cache exists, if so, we use that instead.
-    let video_directory = path.join(cwd, "videos");
-    let cache_file_fpath = path.join(video_directory, 'video_library.json');
+    let cache_file_fpath = path.join(root_dir, 'video_library.json');
 
     // Attempt to load the file
     let cache = null;
     if (fs.existsSync(cache_file_fpath)) {
         try {
-            cache = JSON.parse(await fs.readFile(cache_file_fpath, "utf-8"))
+            cache = JSON.parse(await util.promisify(fs.readFile)(cache_file_fpath, "utf-8"))
             LIB_CACHE = cache;
             return res.send(JSON.stringify(cache));
-        } catch {
+        } catch(e) {
+            console.log(e);
             console.log("Unable to read cache file: " + cache_file_fpath);
         }
     }
     
     // Cache does not exist, we attempt to generate one of our own.
      
-    let options = {cwd: video_directory};
+    let options = {cwd: root_dir};
     let results = (await Promise.all([
         glob("*.mkv", options),
         glob("*.mp4", options)
@@ -142,19 +143,15 @@ app.get("/get_videos", async (req, res) => {
     // go through each results
     let metadata_array = [];
     for (let short_fpath of results) {
-        let fpath = path.join(video_directory, short_fpath);
-        let metadata = await new Promise((resolve, reject) => {
-            ffmpeg.ffprobe(fpath, (err, metadata) => {
-                if (err) { return reject(err); }
-                return resolve(metadata);
-            })
-        });
+        let fpath = path.join(root_dir, short_fpath);
+        let metadata = await util.promisify(ffmpeg.ffprobe)(fpath);
         // Convert to ms.
         metadata_array.push(new VideoMetadata(short_fpath, metadata.format.duration * 1000)); 
     }
 
-    console.log(metadata_array);
     const payload = JSON.stringify({videos: metadata_array});
+    // Write the cache file.
+    fs.writeFileSync(cache_file_fpath, payload);
     res.send(payload);
 });
 
