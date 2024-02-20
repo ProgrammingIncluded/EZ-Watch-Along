@@ -1,17 +1,18 @@
 # EZ Watch Along Streamer
 
-A hassle free, single command solution for watching a video you own amongst your friends!
-If you want to just watch a video amongst some friends, this tool is for you!
+A hassle free solution for watching and syncing videos you own amongst your friends!
 
-* 🤗 EZ to setup! You just need an mp4 file to stream.
-* 📱Mobile support!
+* 🤗 EZ to setup with a single command!
 * 📜 Subtitles support for those foreign film nights!
-* 🛡️ No complicated user management system. Just need to use the generated unique URL.
+* 📱Mobile support!
+* 🛡️ No complicated user management system. Jut use a generated unique URL.
+
+![EZ Watch Along Demo](assets/demo.gif)
 
 ## Requirements
 
 * You will need [NodeJS](https://nodejs.org/en)
-* [ffmpeg binary](https://ffmpeg.org/download.html) located in PATH.
+* [ffmpeg and ffprobe binary](https://ffmpeg.org/download.html) located in PATH.
 
 ## How to Run
 
@@ -64,7 +65,6 @@ If your library is very large, it can take a while to generate a `video_library.
 The original purpose of this tool was to support a small to medium sized library. Consider pointing your root to a sub-folder for a single session.
 
 If there is interest in supporting larger video libraries, please file an issue.
-
 
 # Future Goals
 
