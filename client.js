@@ -48,28 +48,22 @@ function set_video_state(control_data) {
 
         let video_source = $("source")[0];
         if (video_source == undefined) {
+            DISABLE_PUSH_DATA = true;
             video_source = $("<source>", {
                                             src: `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN,
                                             type: "video/mp4"
                                          });
             video_player.append(video_source);
             video_player.get(0).load();
-        } else if (!$(video_source).attr("src").includes(control_data.metadata.fname)) {
+            console.log(control_data);
+        } else if (!$(video_source).attr("src").includes(encodeURI(control_data.metadata.fname))) {
             DISABLE_PUSH_DATA = true;
             video_player.get(0).pause();
             video_player.get(0).currentTime = 0;
             video_player.get(0).load();
-            $.post({
-                traditional: true,
-                url: "/controls?token=" + TOKEN,
-                contentType: "application/json",
-                data: JSON.stringify({action: "reset"}),
-                dataType: "json",
-                success: function(data) { 
-                    $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN)
-                    video_player.get(0).load();
-                }
-            });
+            $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}&token=` + TOKEN)
+            video_player.get(0).load();
+            console.log(control_data);
         }
     }
 }
@@ -132,17 +126,30 @@ function side_bar_search() {
     // On sidebar search result click
     $(".search_result").on("click", function() {
         let video_fname = $(this).attr("fname");
+        DISABLE_PUSH_DATA = true;
         $.post({
             traditional: true,
             url: "/controls?token=" + TOKEN,
             contentType: "application/json",
-            data: JSON.stringify({
-                    action: "set_video",
-                    fname: video_fname
-                  }),
+            data: JSON.stringify({action: "reset"}),
             dataType: "json",
-            success: function(data) { console.log(data); }
+            success: function(data) { 
+
+                $.post({
+                    traditional: true,
+                    url: "/controls?token=" + TOKEN,
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                            action: "set_video",
+                            fname: video_fname
+                          }),
+                    dataType: "json",
+                    success: function(data) { console.log(data); }
+                });
+
+            }
         });
+
     });
 };
 
