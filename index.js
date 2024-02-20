@@ -46,14 +46,6 @@ class PlayerState {
         this.metadata = null;
     }
 
-    set_video_metadata(video_metadata) {
-        this.metadata = video_metadata;
-    }
-
-    get_video_metadata(video_metadata) {
-        return this.metadata;
-    }
-
     play() {
         // idempotent guarantee.
         if (this.start_time == null) {
@@ -82,6 +74,7 @@ const ACTIONS = [
     "play",
     "pause",
     "reset",
+    "set_video",
     "set_time"
 ];
 function verify_action(str_action) {
@@ -162,6 +155,7 @@ app.post("/controls", function(req, res) {
         return res.sendStatus(404);
     }
 
+
     // Process the state
     switch(action) {
         case "reset":
@@ -172,6 +166,18 @@ app.post("/controls", function(req, res) {
             break;
         case "pause":
             PLAYER_STATE.pause();
+            break;
+        case "set_video":
+            const video_fname = req.body.fname;
+            if (video_fname == undefined) {
+                return res.sendStatus(404);
+            } 
+            let search = LIB_CACHE["videos"].find((e) => { return e.fname === video_fname; });
+            if (search == undefined) {
+                return res.sendStatus(404);
+            }
+
+            PLAYER_STATE.metadata = new VideoMetadata(search.fname, search.max_length);
             break;
         case "set_time":
             if (req.body.delta == undefined || req.body.is_playing == undefined) {
@@ -195,11 +201,23 @@ app.get("/controls", function(req, res) {
 });
 
 app.get("/video", function(req, res) {
+    const video_name = req.query.fname;
+    if (video_name == undefined) {
+        return res.sendStatus(404);
+    } else if (LIB_CACHE == null) {
+        return res.sendStatus(404);
+    }
+
+    let valid_video = LIB_CACHE["videos"].find((e) => { return e.fname == video_name; });
+    if (valid_video == undefined) {
+        return res.sendStatus(404);
+    }
+
     const range = req.headers.range;
     if (!range) {
         res.status(400).send("Requires Range header");
     }
-    const video_name = "ova.mp4";
+
     const video_path = path.join(root_dir, video_name);
     const video_size = fs.statSync(video_path).size;
     const CHUNK_SIZE = 10 ** 6;

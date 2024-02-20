@@ -38,6 +38,36 @@ function set_video_state(control_data) {
     if (Math.abs(ct - delta) >= 2) {
         video_player.get(0).currentTime = delta;
     }
+
+    // Set the video source
+    if (control_data.metadata != null) {
+
+        let video_source = $("source")[0];
+        if (video_source == undefined) {
+            video_source = $("<source>", {
+                                            src: `/video?fname=${encodeURI(control_data.metadata.fname)}`,
+                                            type: "video/mp4"
+                                         });
+            video_player.append(video_source);
+            video_player.get(0).load();
+        } else if (!$(video_source).attr("src").includes(control_data.metadata.fname)) {
+            DISABLE_PUSH_DATA = true;
+            video_player.get(0).pause();
+            video_player.get(0).currentTime = 0;
+            video_player.get(0).load();
+            $.post({
+                traditional: true,
+                url: "/controls",
+                contentType: "application/json",
+                data: JSON.stringify({action: "reset"}),
+                dataType: "json",
+                success: function(data) { 
+                    $(video_source).attr("src", `/video?fname=${encodeURI(control_data.metadata.fname)}`)
+                    video_player.get(0).load();
+                }
+            });
+        }
+    }
 }
 
 function update_loop() {
@@ -60,7 +90,7 @@ function side_bar_search() {
         setTimeout(side_bar_search, 1000);
     }
 
-    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => d.fname.includes(search_text));
+    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => { return d.fname.includes(search_text); });
     if (filtered_results.length <= 0) {
         side_bar.html("No results found for: " + search_text);
         return;
@@ -69,20 +99,36 @@ function side_bar_search() {
     let idx = 0;
     side_bar.html("");
     for (let r of filtered_results) {
-        let fname_dom = $("<div>", {"class": "search_pathname", "idx": idx})
+        let fname_dom = $("<div>", {"class": "search_pathname", "fname": r.fname})
         fname_dom.html(r.fname);
 
-        let duration_dom = $("<div>", {"class": "duration"})
-        // TODO: Better duration visualization.
+        let duration_dom = $("<div>", {"class": "duration", "fname": r.fname})
         duration_dom.html("Duration: " + msToTime(r.max_length));
 
-        let search_result = $("<div>", {"class": "search_result"})
+        let search_result = $("<div>", {"class": "search_result", "fname": r.fname})
         search_result.append(fname_dom)
         search_result.append(duration_dom)
         
         side_bar.append(search_result);
         idx += 1;
     }
+
+    // Append hooks to new elements.
+    // On sidebar search result click
+    $(".search_result").on("click", function() {
+        let video_fname = $(this).attr("fname");
+        $.post({
+            traditional: true,
+            url: "/controls",
+            contentType: "application/json",
+            data: JSON.stringify({
+                    action: "set_video",
+                    fname: video_fname
+                  }),
+            dataType: "json",
+            success: function(data) { console.log(data); }
+        });
+    });
 };
 
 $(document).ready(function() {
