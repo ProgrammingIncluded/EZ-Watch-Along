@@ -1,4 +1,4 @@
-# EZ Watch Along Streamer
+# EZ Watch Along
 
 A hassle free solution for watching and syncing videos you own amongst your friends!
 
@@ -28,7 +28,7 @@ This can take a bit of time.
 Your root should contain various mp4 videos.
 Subtitles can be optionally registered, in the same folder, by having the same name as the `.mp4` but with `.vtt` extension.
 
-MKV codecs are coming soon (see [Future Goals](#future-goals)) but until then, you will need to manually convert.
+MKV supprt is coming soon (see [Future Goals](#future-goals)) but until then, you will need to manually convert.
 
 # Contributions and Testing
 
@@ -56,7 +56,7 @@ A couple of things to verify:
 
 * Ensure your server has port (8080) forwarding on the router (if hosting at home.)
 * Ensure you are passing in a `token` in the URL.
-* Ensure that your firewall is allow port 8080.
+* Ensure that your firewall allows port 8080.
 * Ensure you don't have another program using port 8080.
 
 ## Taking a while to generate video lookup cache?
