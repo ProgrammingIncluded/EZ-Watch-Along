@@ -14,21 +14,21 @@ body {
 #video_container {
     grid-row-start: 1;
     grid-row-end: 4;
-    margin: 0 auto;
+    margin: 10vh auto;
 }
 
 #side_bar {
     display: none;
     position: absolute;
-    height: calc( 100vh - 50px - 30px );
-    width: 50%;
+    height: calc( 100vh - 50px );
+    width: 30%;
     top: 50px;
     left: 0;
     background: rgb(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     padding: 1rem;
-    overflow: scroll;
+    overflow-y: auto;
     box-sizing: border-box;
 }
 
@@ -40,6 +40,7 @@ body {
     padding-top: 1rem;
     margin-bottom: 1rem;
     border-color: rgb(150, 150, 150);
+    word-wrap: break-word;
 }
 
 .search_result:hover {
