@@ -104,7 +104,9 @@ function side_bar_search() {
         return;
     }
 
-    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => { return d.fname.includes(search_text); });
+    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => {
+        return d.fname.toLowerCase().includes(search_text.toLowerCase());
+    });
     if (filtered_results.length <= 0) {
         side_bar.html("No results found for: " + search_text);
         return;
