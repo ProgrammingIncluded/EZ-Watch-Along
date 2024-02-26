@@ -104,7 +104,9 @@ function side_bar_search() {
         return;
     }
 
-    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => { return d.fname.includes(search_text); });
+    let filtered_results = SERVER_VIDEOS["videos"].filter((d) => {
+        return d.fname.toLowerCase().includes(search_text.toLowerCase());
+    });
     if (filtered_results.length <= 0) {
         side_bar.html("No results found for: " + search_text);
         return;
@@ -112,16 +114,6 @@ function side_bar_search() {
 
     let idx = 0;
     side_bar.html("");
-    let clean_name_display = (fname) => {
-        let tokens = fname.split("/");
-        let last = tokens[tokens.length - 1];
-        let max_characters = 40;
-
-        if (last.length <= max_characters)
-            return last;
-
-        return last.substring(0, 20) + "..." + last.substring(last.length - max_characters, last.length);
-    }
     for (let r of filtered_results) {
         let fname_dom = $("<div>", {"class": "search_pathname", "fname": r.fname})
         fname_dom.html(clean_name_display(r.fname));
@@ -167,6 +159,25 @@ function side_bar_search() {
 
     });
 };
+
+function clean_name_display (fname) {
+    let tokens = fname.split("/");
+    let last = tokens[tokens.length - 1];
+    let max_characters = 40;
+
+    if (last.length <= max_characters)
+        return last;
+
+    let ellipsis = "...";
+    let pre_ellipsis_length = Math.floor(max_characters / 2);
+    let post_ellipsis_length = max_characters - pre_ellipsis_length - ellipsis.length;
+
+    let clean_name = (last.substring(0, pre_ellipsis_length) +
+                      ellipsis +
+                      last.substring(last.length - post_ellipsis_length, last.length));
+
+    return clean_name;
+}
 
 $(document).ready(function() {
     // Set a update loop to sync with server.
