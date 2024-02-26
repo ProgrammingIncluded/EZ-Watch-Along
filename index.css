@@ -140,6 +140,13 @@ footer a {
     padding-top: 10px;
 }
 
+
+@media only screen and (max-width: 1650px) {
+#side_bar {
+    width: 50%;
+}
+}
+
 @media only screen and (max-width: 800px) {
 #logo {
     float: left;
